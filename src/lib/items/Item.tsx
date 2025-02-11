@@ -1,5 +1,5 @@
 import {
-  Component, createRef,
+  createRef,
   CSSProperties,
   HTMLAttributes,
   LegacyRef,
@@ -119,14 +119,13 @@ export type GetResizeProps = (params?: GetItemPropsParams) => {
   left: GetResizePropsDirection
 }
 
-export default class Item<CustomItem extends TimelineItemBase<number>> extends Component<
-  ItemProps<CustomItem>,
-  ItemState
-> {
-  static defaultProps = {
-    selected: false,
-    itemRenderer: defaultItemRenderer,
-  }
+import React from 'react';
+
+export default class Item<CustomItem extends TimelineItemBase<number>> extends React.Component<ItemProps<CustomItem>, ItemState> {
+  // static defaultProps = {
+  //   selected: false,
+  //   itemRenderer: defaultItemRenderer,
+  // }
   declare context: TimelineContextType
   static contextType = TimelineContext
 

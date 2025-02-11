@@ -56,9 +56,9 @@ class CustomHeader<Data> extends React.Component<CustomHeaderProps<Data>, State>
     }
   }
 
-  static defaultProps = {
-    height: 30,
-  }
+  // static defaultProps = {
+  //   height: 30,
+  // }
 
   /*shouldComponentUpdate(nextProps: CustomHeaderProps<Data>) {
     if (
@@ -192,7 +192,7 @@ export type CustomHeaderWrapperProps<Data> = {
   height?: number | undefined
 }
 
-function CustomHeaderWrapper<Data>({ children, unit, headerData, height }: CustomHeaderWrapperProps<Data>) {
+function CustomHeaderWrapper<Data>({ children, unit, headerData, height = 30 }: CustomHeaderWrapperProps<Data>) {
   const { getTimelineState, showPeriod, getLeftOffsetFromDate } = useTimelineState()
   const timelineState = getTimelineState()
   const { timeSteps } = useTimelineHeadersContext()

@@ -1,60 +1,41 @@
-import React from 'react'
-import {
-  createMarkerStylesWithLeftOffset,
-  createDefaultRenderer,
-} from './shared'
+import React, { useState, useEffect } from 'react'
+import { createMarkerStylesWithLeftOffset, createDefaultRenderer } from './shared'
 import { MarkerRendererType } from '../markerType'
 
 const defaultRenderer = createDefaultRenderer('default-today-line')
 
 type TodayMarkerProps = {
   getLeftOffsetFromDate: (date: number) => number
-  renderer: MarkerRendererType
-  interval: number
+  renderer?: MarkerRendererType // ✅ Optional with default value
+  interval?: number // ✅ Optional with default value
 }
 
-/** Marker that is placed based on current date.  This component updates itself on
- * a set interval, dictated by the 'interval' prop.
+/**
+ * Marker that is placed based on the current date.
+ * This component updates itself on a set interval, dictated by the 'interval' prop.
  */
-class TodayMarker extends React.Component<TodayMarkerProps> {
-  public static defaultProps = {
-    renderer: defaultRenderer,
-  }
+const TodayMarker: React.FC<TodayMarkerProps> = ({
+  getLeftOffsetFromDate,
+  renderer = defaultRenderer, // ✅ Default function parameter
+  interval = 10000, // ✅ Default update interval: 10 seconds
+}) => {
+  const [date, setDate] = useState<number>(Date.now())
 
-  state = {
-    date: Date.now(),
-  }
-  private intervalToken: NodeJS.Timeout | undefined
+  useEffect(() => {
+    // Function to update the date
+    const updateDate = () => setDate(Date.now())
 
-  componentDidMount() {
-    this.intervalToken = this.createIntervalUpdater(this.props.interval)
-  }
+    // Start interval
+    const intervalToken = setInterval(updateDate, interval)
 
-  componentDidUpdate(prevProps: TodayMarkerProps) {
-    if (prevProps.interval !== this.props.interval) {
-      clearInterval(this.intervalToken)
-      this.intervalToken = this.createIntervalUpdater(this.props.interval)
-    }
-  }
+    // Cleanup on unmount or interval change
+    return () => clearInterval(intervalToken)
+  }, [interval]) // ✅ Effect re-runs only when `interval` changes
 
-  createIntervalUpdater(interval: number) {
-    return setInterval(() => {
-      this.setState({
-        date: Date.now(), // FIXME: use date utils pass in as props
-      })
-    }, interval)
-  }
+  const leftOffset = getLeftOffsetFromDate(date)
+  const styles = createMarkerStylesWithLeftOffset(leftOffset)
 
-  componentWillUnmount() {
-    clearInterval(this.intervalToken)
-  }
-
-  render() {
-    const { date } = this.state
-    const leftOffset = this.props.getLeftOffsetFromDate(date)
-    const styles = createMarkerStylesWithLeftOffset(leftOffset)
-    return this.props.renderer({ styles, date })
-  }
+  return renderer({ styles, date })
 }
 
 export default TodayMarker

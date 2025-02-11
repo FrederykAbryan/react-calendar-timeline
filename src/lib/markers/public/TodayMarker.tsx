@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { SubscribeReturn, TimelineMarkersConsumer } from '../TimelineMarkersContext'
 import { MarkerRendererType, MarkerType, TimelineMarkerType } from '../markerType'
 
@@ -9,50 +9,39 @@ export type TodayMarkerProps = {
   children?: MarkerRendererType
 }
 
-class TodayMarker extends React.Component<TodayMarkerProps> {
-  static defaultProps = {
-    interval: 1000 * 10, // default to ten seconds
-  }
-  private unsubscribe: (() => void) | null = null
-  private getMarker: (() => MarkerType) | null = null
-
-  componentDidMount() {
-    const { unsubscribe, getMarker } = this.props.subscribeMarker({
+/**
+ * TodayMarker that subscribes to the timeline marker system and updates based on the given interval.
+ */
+const TodayMarker: React.FC<TodayMarkerProps> = ({
+  interval = 10000, // ✅ Default to 10 seconds
+  subscribeMarker,
+  children,
+}) => {
+  useEffect(() => {
+    const { unsubscribe } = subscribeMarker({
       type: TimelineMarkerType.Today,
-      renderer: this.props.children,
-      interval: this.props.interval,
-    })
-    this.unsubscribe = unsubscribe
-    this.getMarker = getMarker
-  }
+      renderer: children,
+      interval,
+    });
 
-  componentWillUnmount() {
-    if (this.unsubscribe != null) {
-      this.unsubscribe()
-      this.unsubscribe = null
-    }
-  }
+    // Cleanup on unmount
+    return () => unsubscribe();
+  }, [interval, subscribeMarker, children]); // ✅ Re-subscribe only when interval or renderer changes
 
-  componentDidUpdate(prevProps: TodayMarkerProps) {
-    if (prevProps.interval !== this.props.interval && this.getMarker) {
-      const marker = this.getMarker()
-      this.props.updateMarker({
-        ...marker,
-        interval: this.props.interval,
-      })
-    }
-  }
-
-  render() {
-    return null
-  }
+  return null;
 }
 
-// TODO: turn into HOC?
-const TodayMarkerWrapper = (props: Omit<TodayMarkerProps, 'updateMarker' | 'subscribeMarker'>) => {
-  return <TimelineMarkersConsumer>{({ subscribeMarker, updateMarker }) => <TodayMarker subscribeMarker={subscribeMarker} updateMarker={updateMarker} {...props} />}</TimelineMarkersConsumer>
-}
+// Wrapper to inject context dependencies
+const TodayMarkerWrapper: React.FC<Omit<TodayMarkerProps, 'updateMarker' | 'subscribeMarker'>> = (props) => {
+  return (
+    <TimelineMarkersConsumer>
+      {({ subscribeMarker, updateMarker }) => (
+        <TodayMarker subscribeMarker={subscribeMarker} updateMarker={updateMarker} {...props} />
+      )}
+    </TimelineMarkersConsumer>
+  );
+};
 
-TodayMarkerWrapper.displayName = 'TodayMarkerWrapper'
+TodayMarkerWrapper.displayName = 'TodayMarkerWrapper';
 
-export default TodayMarkerWrapper
+export default TodayMarkerWrapper;
